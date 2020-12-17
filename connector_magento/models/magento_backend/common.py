@@ -274,8 +274,8 @@ class MagentoBackend(models.Model):
 
     @api.multi
     def _import_from_date(self, model, from_date_field):
-        import_start_time = datetime.now()
         for backend in self:
+            import_start_time = datetime.now()
             backend.check_magento_structure()
             from_date = backend[from_date_field]
             if from_date:
@@ -287,18 +287,18 @@ class MagentoBackend(models.Model):
                 filters={'from_date': from_date,
                          'to_date': import_start_time}
             )
-        # Records from Magento are imported based on their `created_at`
-        # date.  This date is set on Magento at the beginning of a
-        # transaction, so if the import is run between the beginning and
-        # the end of a transaction, the import of a record may be
-        # missed.  That's why we add a small buffer back in time where
-        # the eventually missed records will be retrieved.  This also
-        # means that we'll have jobs that import twice the same records,
-        # but this is not a big deal because they will be skipped when
-        # the last `sync_date` is the same.
-        next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
-        next_time = fields.Datetime.to_string(next_time)
-        self.write({from_date_field: next_time})
+            # Records from Magento are imported based on their `created_at`
+            # date.  This date is set on Magento at the beginning of a
+            # transaction, so if the import is run between the beginning and
+            # the end of a transaction, the import of a record may be
+            # missed.  That's why we add a small buffer back in time where
+            # the eventually missed records will be retrieved.  This also
+            # means that we'll have jobs that import twice the same records,
+            # but this is not a big deal because they will be skipped when
+            # the last `sync_date` is the same.
+            next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
+            next_time = fields.Datetime.to_string(next_time)
+            backend.write({from_date_field: next_time})
 
     @api.multi
     def import_product_categories(self):
